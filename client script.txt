@@ -1,0 +1,40 @@
+api.controller=function($window,$timeout) {
+	/* widget controller */
+	var c = this;
+
+	//checking if we are in an email
+	var item
+	//checking if we are in an email or that options are added for testing
+
+	if((c.options.userid != '' && c.options.subject != '') || $window.Office && $window.Office.context && $window.Office.context.mailbox && $window.Office.context.mailbox.item) {
+		try {
+
+			//getting the email information
+			var userid = c.options.userid == '' ? $window.NOW.user_id : c.options.userid
+			var subject = c.options.subject == '' ? $window.Office.context.mailbox.item.subject : c.options.subject
+
+			/*
+			for the dev meetup we just look for a subject of that matches 'Requested Item RITM0010004 Approval Request'.
+			We will extract the requested item number. Look it up via the server to get the sys_id,
+			if found then we redirect to the reuqested approval. We also asume an approval is always for a task or extended of task.
+			Note: for a production go live extra security setting should be added
+			*/
+
+			var matcher =  new RegExp(/Requested Item (.*?) Approval Request/);
+			var record = subject.match(matcher)[1];
+
+			c.server.get({userid:userid,record:record}).then(function(d){
+				if(d.data.redirect == true){
+					//changing page
+					$timeout(function() {
+						window.history.replaceState({}, '' , d.data.redirecturl);
+					},100);
+				}
+			})
+
+
+		} catch(e) {
+			//do nothing
+		}
+	}
+};

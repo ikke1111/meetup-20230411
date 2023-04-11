@@ -1,0 +1,21 @@
+(function() {
+	data.redirect = false;	
+	if(input){
+		var grTask = new GlideRecord('task');
+		if(grTask.get('number',input.record)){
+			var grApproval = new GlideRecord('sysapproval_approver');
+			var approvalFor = grApproval.addQuery('document_id',grTask.getUniqueValue());
+			approvalFor.addOrCondition('sysapproval',grTask.getUniqueValue())
+			grApproval.addQuery('approver',input.userid);
+			grApproval.setLimit(2);
+			grApproval.query();
+			if(grApproval.next() && !grApproval.hasNext()){
+				var grPortal = $sp.getPortalRecord();
+				var url = grPortal.url_suffix.toString() + '?id=outlook_approval&table=sysapproval_approver&sys_id=' + grApproval.getUniqueValue();
+				data.redirect = true;
+				data.redirecturl = url;
+			}		
+		}
+	}
+
+})();
